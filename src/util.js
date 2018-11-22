@@ -32,14 +32,14 @@ function tryCatch(fn) {
 //Un-magical enough that using this doesn't prevent
 //extending classes from outside using any convention
 var inherits = function(Child, Parent) {
-    var hasProp = {}.hasOwnProperty;
+    var hasProp = {}.hasOwnProperty;  // 获取一个作用空间
 
     function T() {
         this.constructor = Child;
         this.constructor$ = Parent;
-        for (var propertyName in Parent.prototype) {
-            if (hasProp.call(Parent.prototype, propertyName) &&
-                propertyName.charAt(propertyName.length-1) !== "$"
+        for (var propertyName in Parent.prototype) {  // 迭代Parent的原型 获取属性名
+            if (hasProp.call(Parent.prototype, propertyName) &&  // 如果属性是Parent自己的
+                propertyName.charAt(propertyName.length-1) !== "$"  // 属性名最后不带 $ ( 排除已用inherits处理过的？)
            ) {
                 this[propertyName + "$"] = Parent.prototype[propertyName];
             }
@@ -51,24 +51,24 @@ var inherits = function(Child, Parent) {
 };
 
 
-function isPrimitive(val) {
+function isPrimitive(val) {  // 判断是否是基本类型
     return val == null || val === true || val === false ||
         typeof val === "string" || typeof val === "number";
 
 }
 
-function isObject(value) {
+function isObject(value) {  // 判断是否是 object 类型 如 数组， 对象， 函数
     return typeof value === "function" ||
            typeof value === "object" && value !== null;
 }
 
-function maybeWrapAsError(maybeError) {
+function maybeWrapAsError(maybeError) {  // 格式化为一个错误类型
     if (!isPrimitive(maybeError)) return maybeError;
 
-    return new Error(safeToString(maybeError));
+    return new Error(safeToString(maybeError)); // 如果为基本类型， 就返回一个错误对象
 }
 
-function withAppended(target, appendee) {
+function withAppended(target, appendee) {  // 给目标数组添加一个值 ？
     var len = target.length;
     var ret = new Array(len + 1);
     var i;
@@ -79,12 +79,15 @@ function withAppended(target, appendee) {
     return ret;
 }
 
-function getDataPropertyOrDefault(obj, key, defaultValue) {
+function getDataPropertyOrDefault(obj, key, defaultValue) {  // 获取对像某个属性的值
     if (es5.isES5) {
-        var desc = Object.getOwnPropertyDescriptor(obj, key);
+        // 获取对象的属性的特性， 如果这个属性是访问器属性， 那么返回的对象的属性有 configurable、emumerable、get、set， 如果是数据属性这个对象
+        // 的属性有 configurable、emumerable、writable、value； 如果不存在这个属性那么返回 undefined
+        var desc = Object.getOwnPropertyDescriptor(obj, key); 
+                                                           
 
-        if (desc != null) {
-            return desc.get == null && desc.set == null
+        if (desc != null) { //  undefined != null   false,  undefined !== null  true
+            return desc.get == null && desc.set == null  // 判断是不是访问器属性
                     ? desc.value
                     : defaultValue;
         }
@@ -93,9 +96,9 @@ function getDataPropertyOrDefault(obj, key, defaultValue) {
     }
 }
 
-function notEnumerableProp(obj, name, value) {
+function notEnumerableProp(obj, name, value) {  // 返回一个不可迭代类型
     if (isPrimitive(obj)) return obj;
-    var descriptor = {
+    var descriptor = {  // 定义一个描述符对象
         value: value,
         configurable: true,
         enumerable: false,
@@ -105,7 +108,7 @@ function notEnumerableProp(obj, name, value) {
     return obj;
 }
 
-function thrower(r) {
+function thrower(r) {   // 用于抛出错误  封装？
     throw r;
 }
 
@@ -116,7 +119,7 @@ var inheritedDataKeys = (function() {
         Function.prototype
     ];
 
-    var isExcludedProto = function(val) {
+    var isExcludedProto = function(val) {  // 排除excludedPrototypes所定义的对象的原型
         for (var i = 0; i < excludedPrototypes.length; ++i) {
             if (excludedPrototypes[i] === val) {
                 return true;
@@ -126,11 +129,12 @@ var inheritedDataKeys = (function() {
     };
 
     if (es5.isES5) {
+        // getOwnPropertyNames  用于获取对象的属性名称， 并返回一个由属性名称组成的数组
         var getKeys = Object.getOwnPropertyNames;
-        return function(obj) {
+        return function(obj) {   // 获取整个原型链上的所有属性， 不包含excludedPrototypes所定义的顶端原型
             var ret = [];
-            var visitedKeys = Object.create(null);
-            while (obj != null && !isExcludedProto(obj)) {
+            var visitedKeys = Object.create(null); // 创建一个没有任何属性的空对象(和直接赋值a = {}不同 a会继承原型的属性， 而visitedKeys不会）
+            while (obj != null && !isExcludedProto(obj)) {  // obj不为null 且 obj
                 var keys;
                 try {
                     keys = getKeys(obj);
@@ -139,14 +143,14 @@ var inheritedDataKeys = (function() {
                 }
                 for (var i = 0; i < keys.length; ++i) {
                     var key = keys[i];
-                    if (visitedKeys[key]) continue;
-                    visitedKeys[key] = true;
+                    if (visitedKeys[key]) continue; // 判断是否已经检察过这个属性
+                    visitedKeys[key] = true; 
                     var desc = Object.getOwnPropertyDescriptor(obj, key);
-                    if (desc != null && desc.get == null && desc.set == null) {
+                    if (desc != null && desc.get == null && desc.set == null) { // 只获取这个对象的数据属性
                         ret.push(key);
                     }
                 }
-                obj = es5.getPrototypeOf(obj);
+                obj = es5.getPrototypeOf(obj);  // 获取这个对象的原型
             }
             return ret;
         };
