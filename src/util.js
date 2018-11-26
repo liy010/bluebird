@@ -180,7 +180,7 @@ var inheritedDataKeys = (function() {
 })();
 
 var thisAssignmentPattern = /this\s*\.\s*\S+\s*=/;
-function isClass(fn) {
+function isClass(fn) {  
     try {
         if (typeof fn === "function") {
             var keys = es5.names(fn.prototype);
