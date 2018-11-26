@@ -96,7 +96,7 @@ function getDataPropertyOrDefault(obj, key, defaultValue) {  // 获取对像某�
     }
 }
 
-function notEnumerableProp(obj, name, value) {  // 返回一个不可迭代类型
+function notEnumerableProp(obj, name, value) {  // 给对象添加一个不可迭代的属性 name 值为 value
     if (isPrimitive(obj)) return obj;
     var descriptor = {  // 定义一个描述符对象
         value: value,
@@ -104,7 +104,7 @@ function notEnumerableProp(obj, name, value) {  // 返回一个不可迭代类�
         enumerable: false,
         writable: true
     };
-    es5.defineProperty(obj, name, descriptor);
+    es5.defineProperty(obj, name, descriptor);  
     return obj;
 }
 
@@ -183,14 +183,16 @@ var thisAssignmentPattern = /this\s*\.\s*\S+\s*=/;
 function isClass(fn) {  
     try {
         if (typeof fn === "function") {
-            var keys = es5.names(fn.prototype);
+            var keys = es5.names(fn.prototype);  // names:  Object.getOwnPropertyNames
 
             var hasMethods = es5.isES5 && keys.length > 1;
             var hasMethodsOtherThanConstructor = keys.length > 0 &&
-                !(keys.length === 1 && keys[0] === "constructor");
+                !(keys.length === 1 && keys[0] === "constructor");  // 含有处理constructor属性外的其他属性
             var hasThisAssignmentAndStaticMethods =
-                thisAssignmentPattern.test(fn + "") && es5.names(fn).length > 0;
-
+                // fn + "" 会把 fn函数的代码 以字符串形式输出出来， 如果fn是构造函数的表达式， 那么输出 "[object Object]"
+                thisAssignmentPattern.test(fn + "") && es5.names(fn).length > 0; // 至少含有constructor
+                // 判断是否含有this
+            
             if (hasMethods || hasMethodsOtherThanConstructor ||
                 hasThisAssignmentAndStaticMethods) {
                 return true;
@@ -225,7 +227,7 @@ function isIdentifier(str) {
     return rident.test(str);
 }
 
-function filledRange(count, prefix, suffix) {
+function filledRange(count, prefix, suffix) {   // 数组填充
     var ret = new Array(count);
     for(var i = 0; i < count; ++i) {
         ret[i] = prefix + i + suffix;
@@ -233,7 +235,7 @@ function filledRange(count, prefix, suffix) {
     return ret;
 }
 
-function safeToString(obj) {
+function safeToString(obj) {   // 转化为 string 类型
     try {
         return obj + "";
     } catch (e) {
@@ -241,9 +243,9 @@ function safeToString(obj) {
     }
 }
 
-function isError(obj) {
-    return obj instanceof Error ||
-        (obj !== null &&
+function isError(obj) {  // 判断是否为错误类型
+    return obj instanceof Error ||   // 继承自 Error 对象
+        (obj !== null &&             // 或者 是自定义的错误类型，(自定义错误类型需要为新创建的错误类型指定name和message属性)
            typeof obj === "object" &&
            typeof obj.message === "string" &&
            typeof obj.name === "string");
@@ -256,18 +258,18 @@ function markAsOriginatingFromRejection(e) {
     catch(ignore) {}
 }
 
-function originatesFromRejection(e) {
+function originatesFromRejection(e) {  // e 为一个对象
     if (e == null) return false;
-    return ((e instanceof Error[BLUEBIRD_ERRORS].OperationalError) ||
+    return ((e instanceof Error[BLUEBIRD_ERRORS].OperationalError) ||  // e 继承自 自定义的OpreationalError
         e[OPERATIONAL_ERROR_KEY] === true);
 }
 
 function canAttachTrace(obj) {
-    return isError(obj) && es5.propertyIsWritable(obj, "stack");
+    return isError(obj) && es5.propertyIsWritable(obj, "stack");  // obj的stack属性 是否是可写的， 且obj是否是错误对象
 }
 
 var ensureErrorObject = (function() {
-    if (!("stack" in new Error())) {
+    if (!("stack" in new Error())) {  // 经测试， stack 是给 Error 对象的原型添加 stack 属性
         return function(value) {
             if (canAttachTrace(value)) return value;
             try {throw new Error(safeToString(value));}
@@ -282,11 +284,11 @@ var ensureErrorObject = (function() {
 })();
 
 function classString(obj) {
-    return {}.toString.call(obj);
+    return {}.toString.call(obj);  // 获取obj的类型
 }
 
-function copyDescriptors(from, to, filter) {
-    var keys = es5.names(from);
+function copyDescriptors(from, to, filter) {  // filter 为过滤函数
+    var keys = es5.names(from);  // 获取 from 的自有属性
     for (var i = 0; i < keys.length; ++i) {
         var key = keys[i];
         if (filter(key)) {
@@ -298,14 +300,14 @@ function copyDescriptors(from, to, filter) {
 }
 
 var asArray = function(v) {
-    if (es5.isArray(v)) {
+    if (es5.isArray(v)) {  // 判断 v 是否为数组
         return v;
     }
     return null;
 };
 
 if (typeof Symbol !== "undefined" && Symbol.iterator) {
-    var ArrayFrom = typeof Array.from === "function" ? function(v) {
+    var ArrayFrom = typeof Array.from === "function" ? function(v) {  // 判断是否存在 复写 Array 对象 此对象含有 from 属性
         return Array.from(v);
     } : function(v) {
         var ret = [];
@@ -327,8 +329,8 @@ if (typeof Symbol !== "undefined" && Symbol.iterator) {
     };
 }
 
-var isNode = typeof process !== "undefined" &&
-        classString(process).toLowerCase() === "[object process]";
+var isNode = typeof process !== "undefined" &&   
+        classString(process).toLowerCase() === "[object process]";  // 通过 Symbol 来设置 toString() 的返回值
 
 var hasEnvVariables = typeof process !== "undefined" &&
     typeof process.env !== "undefined";
@@ -337,11 +339,12 @@ function env(key) {
     return hasEnvVariables ? process.env[key] : undefined;
 }
 
-function getNativePromise() {
+function getNativePromise() {  // 用于获取设备支持的原生 Promise
     if (typeof Promise === "function") {
         try {
             var promise = new Promise(function(){});
-            if ({}.toString.call(promise) === "[object Promise]") {
+            if ({}.toString.call(promise) === "[object Promise]") {  // 浏览器Console直接执行 {}.toString.call(promise) 会报 Uncaught SyntaxError: Unexpected token .
+                                                                     // var str = {}.toString; str.call(promise) 正确
                 return Promise;
             }
         } catch (e) {}
