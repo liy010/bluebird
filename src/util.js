@@ -329,8 +329,8 @@ if (typeof Symbol !== "undefined" && Symbol.iterator) {
     };
 }
 
-var isNode = typeof process !== "undefined" &&   
-        classString(process).toLowerCase() === "[object process]";  // 通过 Symbol 来设置 toString() 的返回值
+var isNode = typeof process !== "undefined" &&   // 判断是不是 node 
+        classString(process).toLowerCase() === "[object process]";
 
 var hasEnvVariables = typeof process !== "undefined" &&
     typeof process.env !== "undefined";
