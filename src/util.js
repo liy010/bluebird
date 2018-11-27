@@ -391,7 +391,7 @@ var ret = {
     getNativePromise: getNativePromise,
     domainBind: domainBind
 };
-ret.isRecentNode = ret.isNode && (function() {
+ret.isRecentNode = ret.isNode && (function() {  // node 下 process.versions.node 返回 不带 v 的版本号 如 "8.11.3"
     var version = process.versions.node.split(".").map(Number);
     return (version[0] === 0 && version[1] > 10) || (version[0] > 0);
 })();
