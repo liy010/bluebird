@@ -12,14 +12,14 @@ var NativePromise = util.getNativePromise();
 // Our scheduler for NodeJS/io.js is setImmediate for recent
 // versions of node because of macrotask semantics.
 // The `typeof` check is for an edge case with nw.js.
-if (util.isNode && typeof MutationObserver === "undefined") {
+if (util.isNode && typeof MutationObserver === "undefined") {  // 判断在不在 node 环境下
     var GlobalSetImmediate = global.setImmediate;
     var ProcessNextTick = process.nextTick;
-    schedule = util.isRecentNode
+    schedule = util.isRecentNode  // 判断是不是新版本
                 ? function(fn) { GlobalSetImmediate.call(global, fn); }
                 : function(fn) { ProcessNextTick.call(process, fn); };
 } else if (typeof NativePromise === "function" &&
-           typeof NativePromise.resolve === "function") {
+           typeof NativePromise.resolve === "function") {  // 在浏览器环境下 且有promise
     var nativePromise = NativePromise.resolve();
     schedule = function(fn) {
         nativePromise.then(fn);
@@ -31,7 +31,7 @@ if (util.isNode && typeof MutationObserver === "undefined") {
 } else if ((typeof MutationObserver !== "undefined") &&
           !(typeof window !== "undefined" &&
             window.navigator &&
-            (window.navigator.standalone || window.cordova))) {
+            (window.navigator.standalone || window.cordova))) {  // 判断在ios或cordova（为一个能够在移动端通过javascript调用设备上的硬件的框架）
     schedule = (function() {
         // Using 2 mutation observers to batch multiple updates into one.
         var div = document.createElement("div");
@@ -52,7 +52,7 @@ if (util.isNode && typeof MutationObserver === "undefined") {
 
         return function schedule(fn) {
             var o = new MutationObserver(function() {
-                o.disconnect();
+                o.disconnect();   // 用来停止观察
                 fn();
             });
             o.observe(div, opts);
