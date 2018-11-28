@@ -20,7 +20,7 @@ function Async() {
     this._schedule = schedule;
 }
 
-Async.prototype.setScheduler = function(fn) {
+Async.prototype.setScheduler = function(fn) {    // 设置调度器
     var prev = this._schedule;
     this._schedule = fn;
     this._customScheduler = true;
@@ -41,12 +41,12 @@ Async.prototype.disableTrampolineIfNecessary = function() {
     }
 };
 
-Async.prototype.haveItemsQueued = function () {
+Async.prototype.haveItemsQueued = function () {   // 是否有在队列中的项
     return this._isTickUsed || this._haveDrainedQueues;
 };
 
 
-Async.prototype.fatalError = function(e, isNode) {
+Async.prototype.fatalError = function(e, isNode) {  // 致命错误
     if (isNode) {
         process.stderr.write("Fatal " + (e instanceof Error ? e.stack : e) +
             "\n");
@@ -77,7 +77,7 @@ Async.prototype.throwLater = function(fn, arg) {
 
 //When the fn absolutely needs to be called after
 //the queue has been completely flushed
-function AsyncInvokeLater(fn, receiver, arg) {
+function AsyncInvokeLater(fn, receiver, arg) {  // 异步调用延迟
     ASSERT(arguments.length === 3);
     this._lateQueue.push(fn, receiver, arg);
     this._queueTick();
